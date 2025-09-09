@@ -77,6 +77,10 @@
 
   </header>
 
+  <div class="row" style="margin: 8px 0 4px 0; align-items:center">
+    <label><input type="checkbox" id="debugToggle"> Show calculation debug</label>
+  </div>
+
   <div id="status" class="muted">Loading…</div>
 
   <table id="results" hidden>
@@ -109,6 +113,13 @@
     </div>
   </footer>
 
+  <section id="debug-panel" hidden>
+    <h3>Calculation Debug</h3>
+    <div id="debug-context" class="muted"></div>
+    <div id="debug-items"></div>
+    <div id="debug-totals" class="muted" style="margin-top:8px"></div>
+  </section>
+
   <script>
   const $ = (sel) => document.querySelector(sel);
   const wfSel = $('#workflow');
@@ -118,12 +129,17 @@
   const modeSel = $('#mode');
   const audioOnlyChk = $('#audioOnly');
   const localitySel = $('#locality');
+  const debugChk = $('#debugToggle');
   const status = $('#status');
   const table = $('#results');
   const tbody = table.querySelector('tbody');
   const totalCell = $('#total');
   const ptTotalCell = $('#pt-total');
   const copyBtn = $('#copy-codes');
+  const debugPanel = $('#debug-panel');
+  const debugContext = $('#debug-context');
+  const debugItems = $('#debug-items');
+  const debugTotals = $('#debug-totals');
 
   const money = (n) => n.toLocaleString(undefined, { style: 'currency', currency: 'USD' });
 
@@ -131,6 +147,10 @@
     const r = await fetch(url, { credentials: 'same-origin' });
     if (!r.ok) throw new Error(`HTTP ${r.status}`);
     return r.json();
+  }
+
+  function fmtMaybeMoney(n) {
+    return (n == null) ? '<span class="muted">—</span>' : money(Number(n));
   }
 
   async function loadWorkflows() {
@@ -177,8 +197,9 @@
         localityParam = `&locality=${encodeURIComponent(loc)}`;
       }
 
+      const debugParam = debugChk.checked ? '&debug=true' : '';
       const data = await fetchJSON(
-        `/api/workflows/${slug}/details?cy=${cy}&payerId=${payerId}&place=${place}&mode=${mode}${audioOnly ? `&audioOnly=${audioOnly}` : ''}${macParam}${localityParam}`
+        `/api/workflows/${slug}/details?cy=${cy}&payerId=${payerId}&place=${place}&mode=${mode}${audioOnly ? `&audioOnly=${audioOnly}` : ''}${macParam}${localityParam}${debugParam}`
       );
 
       tbody.innerHTML = '';
@@ -231,6 +252,40 @@
       status.innerHTML =
         `<span class="ok">✓</span> ${data.workflow.name} — ${data.payer.name} — CY ${data.cy} — ${data.place}${locLabel}`;
  
+      // Render debug panel if present
+      if (data.debug) {
+        debugPanel.hidden = false;
+        const ctx = data.debug.context;
+        debugContext.textContent = `Workflow: ${ctx.workflow.name} | Payer: ${ctx.payer.name} | CY ${ctx.cy} | place=${ctx.place} | mode=${ctx.mode}` + (ctx.mac ? ` | MAC ${ctx.mac} / Loc ${ctx.locality}` : '');
+        const rows = data.debug.items.map(it => {
+          const fields = [
+            ['Code', it.code],
+            ['Base allowed (national)', fmtMaybeMoney(it.baseAllowed)],
+            ['Locality allowed', fmtMaybeMoney(it.localityAllowed)],
+            ['Baseline used', fmtMaybeMoney(it.chosenBaseline)],
+            ['Payer multiplier', it.payerMultiplier ?? '—'],
+            ['Payer override', fmtMaybeMoney(it.payerOverride)],
+            ['Amount source', it.amountSource],
+            ['Computed amount', fmtMaybeMoney(it.computedAmount)],
+            ['POS', it.pos || '—'],
+            ['Tele modifier', it.teleModifier || '—'],
+            ['Placeholder', it.isPlaceholder ? 'yes' : 'no'],
+            ['Patient portion', fmtMaybeMoney(it.patientPortion)],
+            ['Patient basis', it.patientPortionLabel || '—']
+          ];
+          return `<table style="margin:8px 0; border:1px solid #eee; width:100%">` +
+                 fields.map(([k,v]) => `<tr><th style="text-align:left; background:#fafafa; width:240px; padding:4px 8px; border-bottom:1px solid #eee">${k}</th><td style="padding:4px 8px; border-bottom:1px solid #eee">${v}</td></tr>`).join('') +
+                 `</table>`;
+        }).join('');
+        debugItems.innerHTML = rows;
+        debugTotals.textContent = `Totals — Computed: ${money(data.debug.totals.total)}; Patient: ${money(data.debug.totals.patientTotal)}`;
+        console.log('[Calc Debug]', data.debug);
+      } else {
+        debugPanel.hidden = true;
+        debugItems.innerHTML = '';
+        debugContext.textContent = '';
+        debugTotals.textContent = '';
+      }
 
 
       copyBtn.onclick = async () => {
@@ -262,6 +317,7 @@
     modeSel.addEventListener('change', loadDetails);
     audioOnlyChk.addEventListener('change', loadDetails);
     localitySel.addEventListener('change', loadDetails);
+    debugChk.addEventListener('change', loadDetails);
   })();
   </script>
 </body>

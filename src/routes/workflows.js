@@ -49,6 +49,7 @@ router.get('/:slug/details', async (req, res) => {
     place: z.enum(['facility','nonfacility']).default('nonfacility'),
     mode: z.enum(['inperson','telehome','tele02']).default('inperson'),
     audioOnly: z.coerce.boolean().optional(),
+    debug: z.coerce.boolean().optional(),
     mac: z.string().trim().optional(),
     locality: z.string().trim().optional()
  
@@ -61,12 +62,13 @@ router.get('/:slug/details', async (req, res) => {
     place: req.query.place || 'nonfacility',
     mode: req.query.mode || 'inperson',
     audioOnly: req.query.audioOnly,
+    debug: req.query.debug,
     mac: req.query.mac,
     locality: req.query.locality
   });
   if (!parsed.success) return res.status(400).json(parsed.error);
 
-    const { slug, cy, payerId, place, mode, audioOnly, mac, locality } = parsed.data;
+    const { slug, cy, payerId, place, mode, audioOnly, mac, locality, debug } = parsed.data;
  
   // Telehealth -> derive effective place & POS
   let effectivePlace = place;
@@ -186,7 +188,7 @@ router.get('/:slug/details', async (req, res) => {
     }
  
 
-    return {
+    const item = {
       code: c.code,
       codeType: c.code_type,
       isBase: !!c.is_base,
@@ -210,6 +212,44 @@ router.get('/:slug/details', async (req, res) => {
       patientPortionLabel
 
     };
+
+    // Optional debugging payload on each item
+    if (debug) {
+      item.debug = {
+        labels: {
+          code: 'Procedure code',
+          baseAllowed: 'Medicare allowed (national)',
+          localityAllowed: 'Medicare allowed (locality)',
+          chosenBaseline: 'Baseline used',
+          payerMultiplier: 'Payer multiplier',
+          payerOverride: 'Payer override',
+          amountSource: 'Amount source',
+          computedAmount: 'Computed amount',
+          pos: 'Place of service (POS)',
+          teleModifier: 'Telehealth modifier',
+          isPlaceholder: 'Placeholder seed value',
+          patientPortion: 'Estimated patient portion',
+          patientPortionLabel: 'Patient portion basis'
+        },
+        values: {
+          code: c.code,
+          baseAllowed: base?.amount ?? null,
+          localityAllowed: loc?.amount ?? null,
+          chosenBaseline: med,
+          payerMultiplier: Number(payer.multiplier),
+          payerOverride: override ?? null,
+          amountSource: item.amountSource,
+          computedAmount: item.amount,
+          pos,
+          teleModifier,
+          isPlaceholder: !!placeholder,
+          patientPortion: patientPortion,
+          patientPortionLabel
+        }
+      };
+    }
+
+    return item;
   });
 
    const total = items.reduce((acc, it) => acc + it.amount, 0);
@@ -217,13 +257,55 @@ router.get('/:slug/details', async (req, res) => {
   const patientTotal = items.reduce((acc, it) => acc + (it.patientPortion ?? 0), 0);
  
 
-    res.json({
+  const response = {
     workflow: wf, payer, cy, place, mode, pos, teleModifier,
     mac: mac || null, locality: locality || null,
     items,
     total: Number(total.toFixed(2)),
     patientTotal: Number(patientTotal.toFixed(2))
-  });
+  };
+
+  if (debug) {
+    // Server-side console logging for spot-checks
+    console.log('=== Calculation Debug ===');
+    console.log('Context:', {
+      workflow: wf.slug,
+      payer: payer.name,
+      cy, place, mode, pos, teleModifier,
+      mac: mac || null, locality: locality || null
+    });
+    for (const it of items) {
+      console.log(`Code ${it.code}:`, {
+        baseAllowed: feeMap.get(it.code)?.amount ?? null,
+        localityAllowed: lfMap.get(it.code)?.amount ?? null,
+        chosenBaseline: it.medicareBaseline,
+        payerMultiplier: Number(payer.multiplier),
+        payerOverride: ovMap.get(it.code) ?? null,
+        amountSource: it.amountSource,
+        computedAmount: it.amount,
+        pos,
+        teleModifier,
+        isPlaceholder: it.isPlaceholder,
+        patientPortion: it.patientPortion ?? null,
+        patientPortionLabel: it.patientPortionLabel ?? null
+      });
+    }
+    console.log('Totals:', { total: response.total, patientTotal: response.patientTotal });
+
+    // Attach a summarized debug block to the response for UI rendering
+    response.debug = {
+      context: {
+        workflow: wf,
+        payer,
+        cy, place, mode, pos, teleModifier,
+        mac: mac || null, locality: locality || null
+      },
+      items: items.map(it => ({ code: it.code, ...(it.debug?.values || {}) })),
+      totals: { total: response.total, patientTotal: response.patientTotal }
+    };
+  }
+
+  res.json(response);
   
 });
 
