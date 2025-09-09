@@ -55,6 +55,16 @@
         <option value="facility">Facility</option>
       </select>
     </div>
+    <div>
+      <label for="render">Rendering</label>
+      <select id="render">
+        <option value="physician" selected>Physician (100%)</option>
+        <option value="nppa">NP/PA (85%)</option>
+      </select>
+      <div class="muted" style="margin-top:4px">
+        <small>Tip: choose “Physician” if billing incident-to (when fully compliant).</small>
+      </div>
+    </div>
 
         <div>
       <label for="locality">Locality</label>
@@ -127,6 +137,7 @@
   const yearSel = $('#year');
   const placeSel = $('#place');
   const modeSel = $('#mode');
+  const renderSel = $('#render');
   const audioOnlyChk = $('#audioOnly');
   const localitySel = $('#locality');
   const debugChk = $('#debugToggle');
@@ -184,6 +195,7 @@
       const cy = yearSel.value;
       const place = placeSel.value;
       const mode = modeSel.value;
+      const render = renderSel.value;
       const audioOnly = audioOnlyChk.checked ? 'true' : '';
 
       // Disable manual 'place' when telehealth (we derive it)
@@ -199,7 +211,7 @@
 
       const debugParam = debugChk.checked ? '&debug=true' : '';
       const data = await fetchJSON(
-        `/api/workflows/${slug}/details?cy=${cy}&payerId=${payerId}&place=${place}&mode=${mode}${audioOnly ? `&audioOnly=${audioOnly}` : ''}${macParam}${localityParam}${debugParam}`
+        `/api/workflows/${slug}/details?cy=${cy}&payerId=${payerId}&place=${place}&mode=${mode}&render=${render}${audioOnly ? `&audioOnly=${audioOnly}` : ''}${macParam}${localityParam}${debugParam}`
       );
 
       tbody.innerHTML = '';
@@ -224,6 +236,7 @@
           <td>
             ${money(item.amount)} ${placeholder}
             ${data.pos ? `<div class="muted">POS ${data.pos}${data.teleModifier ? ` · Mod ${data.teleModifier}` : ''}</div>` : ''}
+            ${item.render ? `<div class="muted">${item.render === 'nppa' ? 'NP/PA 85%' : 'Physician 100%'}</div>` : ''}
           </td>
 
             <td>
@@ -315,6 +328,7 @@
     });
     placeSel.addEventListener('change', loadDetails);
     modeSel.addEventListener('change', loadDetails);
+    renderSel.addEventListener('change', loadDetails);
     audioOnlyChk.addEventListener('change', loadDetails);
     localitySel.addEventListener('change', loadDetails);
     debugChk.addEventListener('change', loadDetails);
