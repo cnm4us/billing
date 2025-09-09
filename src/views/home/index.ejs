@@ -1,0 +1,268 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title><%= title || "Billing Workflow MVP" %></title>
+  <style>
+    body { font: 14px/1.4 system-ui, -apple-system, Segoe UI, Roboto, sans-serif; margin: 24px; color: #111; }
+    header { display:flex; gap:12px; flex-wrap:wrap; align-items:end; margin-bottom: 16px; }
+    label { display:block; font-weight:600; margin-bottom:4px; }
+    select, input { padding:8px; border:1px solid #ccc; border-radius:8px; background:#fff; }
+    .grid { display:grid; gap:12px; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); }
+    table { width:100%; border-collapse: collapse; margin-top: 12px; }
+    th, td { border-bottom:1px solid #eee; padding:8px; text-align:left; vertical-align: top; }
+    th { background:#fafafa; position: sticky; top: 0; }
+    .badge { display:inline-block; padding:2px 8px; border-radius:999px; font-size:12px; background:#eef; color:#225; margin-left:6px; }
+    .muted { color:#666; }
+    .total { font-weight:800; font-size: 16px; }
+    .notes ul { margin:6px 0 0 18px; padding:0; }
+    .ok { color:#0a0; }
+    .warn { color:#a60; }
+    footer { margin-top: 18px; color:#666; }
+    .row { display:flex; gap:12px; flex-wrap:wrap; align-items:center; }
+    button { padding:8px 12px; border:1px solid #ccc; background:#fff; border-radius:8px; cursor:pointer; }
+    button:hover { background:#f6f6f6; }
+  </style>
+</head>
+<body>
+  <h1>Billing Workflow MVP</h1>
+
+  <% if (typeof error !== "undefined" && error) { %>
+    <p class="warn"><strong>Error:</strong> <%= error %></p>
+  <% } %>
+
+  <header class="grid">
+    <div>
+      <label for="workflow">Workflow</label>
+      <select id="workflow"></select>
+    </div>
+    <div>
+      <label for="payer">Payer</label>
+      <select id="payer"></select>
+    </div>
+    <div>
+      <label for="year">Calendar Year</label>
+      <select id="year">
+        <option value="2026">2026 (proposed/placeholder)</option>
+        <option value="2025" selected>2025</option>
+      </select>
+    </div>
+    <div>
+      <label for="place">Place of Service</label>
+      <select id="place">
+        <option value="nonfacility" selected>Non-facility (office)</option>
+        <option value="facility">Facility</option>
+      </select>
+    </div>
+
+        <div>
+      <label for="locality">Locality</label>
+      <select id="locality">
+        <option value="">National (no locality)</option>
+      </select>
+    </div>
+
+        <div>
+      <label for="mode">Visit Mode</label>
+      <select id="mode">
+        <option value="inperson" selected>In-person</option>
+        <option value="telehome">Telehealth – Patient Home (POS 10)</option>
+        <option value="tele02">Telehealth – Other Site (POS 02)</option>
+      </select>
+      <div class="muted" style="margin-top:4px">
+        <label><input type="checkbox" id="audioOnly"> Audio-only (modifier 93)</label>
+      </div>
+    </div>
+
+  </header>
+
+  <div id="status" class="muted">Loading…</div>
+
+  <table id="results" hidden>
+    <thead>
+      <tr>
+        <th style="width:120px">Code</th>
+        <th>Type</th>
+        <th>Role</th>
+        <th style="width:120px">Amount</th>
+        <th style="width:120px">Patient</th>
+        <th>Notes</th>
+      </tr>
+    </thead>
+    <tbody></tbody>
+    <tfoot>
+      <tr>
+        <td colspan="3" class="total">Total</td>
+        <td class="total" id="total">$0.00</td>
+        <td></td>
+        <td class="total" id="pt-total">$0.00</td>
+       <td></td>
+      </tr>
+    </tfoot>
+  </table>
+
+  <footer>
+    <div class="row">
+      <button id="copy-codes">Copy codes</button>
+      <span class="muted">Amounts marked with <span class="badge">placeholder</span> are seed values; replace with real PFS later.</span>
+    </div>
+  </footer>
+
+  <script>
+  const $ = (sel) => document.querySelector(sel);
+  const wfSel = $('#workflow');
+  const payerSel = $('#payer');
+  const yearSel = $('#year');
+  const placeSel = $('#place');
+  const modeSel = $('#mode');
+  const audioOnlyChk = $('#audioOnly');
+  const localitySel = $('#locality');
+  const status = $('#status');
+  const table = $('#results');
+  const tbody = table.querySelector('tbody');
+  const totalCell = $('#total');
+  const ptTotalCell = $('#pt-total');
+  const copyBtn = $('#copy-codes');
+
+  const money = (n) => n.toLocaleString(undefined, { style: 'currency', currency: 'USD' });
+
+  async function fetchJSON(url) {
+    const r = await fetch(url, { credentials: 'same-origin' });
+    if (!r.ok) throw new Error(`HTTP ${r.status}`);
+    return r.json();
+  }
+
+  async function loadWorkflows() {
+    const list = await fetchJSON('/api/workflows'); // server exposes this prefix
+    wfSel.innerHTML = list.map(w => `<option value="${w.slug}">${w.name}</option>`).join('');
+  }
+
+  async function loadPayers() {
+    const list = await fetchJSON('/api/workflows/payers');
+    payerSel.innerHTML = list.map(p => `<option value="${p.id}">${p.name}</option>`).join('');
+  }
+
+  async function loadLocalities() {
+    const cy = yearSel.value;
+    const list = await fetchJSON(`/api/workflows/localities?cy=${cy}`);
+    const opts = ['<option value="">National (no locality)</option>']
+      .concat(list.map(l => `<option value="${l.mac}|${l.locality}">${l.label}</option>`));
+    const prev = localitySel.value;
+    localitySel.innerHTML = opts.join('');
+    if ([...localitySel.options].some(o => o.value === prev)) localitySel.value = prev;
+  }
+
+
+  async function loadDetails() {
+    table.hidden = true;
+    status.textContent = 'Loading…';
+
+    try {
+      const slug = wfSel.value;
+      const payerId = payerSel.value;
+      const cy = yearSel.value;
+      const place = placeSel.value;
+      const mode = modeSel.value;
+      const audioOnly = audioOnlyChk.checked ? 'true' : '';
+
+      // Disable manual 'place' when telehealth (we derive it)
+      placeSel.disabled = (mode !== 'inperson');
+      const locVal = localitySel.value;
+      let macParam = '';
+      let localityParam = '';
+      if (locVal) {
+        const [mac, loc] = locVal.split('|');
+        macParam = `&mac=${encodeURIComponent(mac)}`;
+        localityParam = `&locality=${encodeURIComponent(loc)}`;
+      }
+
+      const data = await fetchJSON(
+        `/api/workflows/${slug}/details?cy=${cy}&payerId=${payerId}&place=${place}&mode=${mode}${audioOnly ? `&audioOnly=${audioOnly}` : ''}${macParam}${localityParam}`
+      );
+
+      tbody.innerHTML = '';
+      const codesForCopy = [];
+
+      for (const item of data.items) {
+        const tr = document.createElement('tr');
+        const placeholder = item.isPlaceholder ? '<span class="badge">placeholder</span>' : '';
+
+        const metaBadges = [];
+        if (item.betos) metaBadges.push(`<span class="badge">BETOS ${item.betos}</span>`);
+        if (item.oppsStatus && item.codeType === 'HCPCS') metaBadges.push(`<span class="badge">OPPS ${item.oppsStatus}</span>`);
+
+        tr.innerHTML = `
+          <td>
+            <strong>${item.code}</strong>
+            ${item.descShort ? `<div class="muted">${item.descShort}</div>` : ''}
+            ${metaBadges.length ? `<div class="muted">${metaBadges.join(' ')}</div>` : ''}
+          </td>
+          <td>${item.codeType}</td>
+          <td>${item.isBase ? 'Base' : 'Add-on'}</td>
+          <td>
+            ${money(item.amount)} ${placeholder}
+            ${data.pos ? `<div class="muted">POS ${data.pos}${data.teleModifier ? ` · Mod ${data.teleModifier}` : ''}</div>` : ''}
+          </td>
+
+            <td>
+              ${
+                (item.patientPortion != null)
+            ? `${money(item.patientPortion)} <span class="badge">est.</span>`
+            : '<span class="muted">—</span>'
+              }
+              ${item.patientPortionLabel ? `<div class="muted">${item.patientPortionLabel}</div>` : ''}
+            </td>
+          <td class="notes">
+            ${item.notes?.length ? '<ul>' + item.notes.map(n => '<li>' + n + '</li>').join('') + '</ul>' : '<span class="muted">—</span>'}
+          </td>
+        `;
+
+        tbody.appendChild(tr);
+        codesForCopy.push(item.code);
+      }
+
+      totalCell.textContent = money(data.total);
+      ptTotalCell.textContent = money(data.patientTotal || 0);
+      table.hidden = false;
+      const locLabel = localitySel.value
+        ? ` — Locality ${localitySel.options[localitySel.selectedIndex].text}`
+        : '';
+      status.innerHTML =
+        `<span class="ok">✓</span> ${data.workflow.name} — ${data.payer.name} — CY ${data.cy} — ${data.place}${locLabel}`;
+ 
+
+
+      copyBtn.onclick = async () => {
+        try {
+          await navigator.clipboard.writeText(codesForCopy.join(', '));
+          copyBtn.textContent = 'Copied!';
+        } catch {
+          const txt = codesForCopy.join(', ');
+          window.prompt('Copy codes:', txt);
+        } finally {
+          setTimeout(() => (copyBtn.textContent = 'Copy codes'), 1200);
+        }
+      };
+    } catch (e) {
+      status.innerHTML = `<span class="warn">⚠</span> ${e.message}`;
+    }
+  }
+
+  (async () => {
+    await Promise.all([loadWorkflows(), loadPayers(), loadLocalities()]);
+    await loadDetails();
+    wfSel.addEventListener('change', loadDetails);
+    payerSel.addEventListener('change', loadDetails);
+    yearSel.addEventListener('change', async () => {
+      await loadLocalities();
+      await loadDetails();
+    });
+    placeSel.addEventListener('change', loadDetails);
+    modeSel.addEventListener('change', loadDetails);
+    audioOnlyChk.addEventListener('change', loadDetails);
+    localitySel.addEventListener('change', loadDetails);
+  })();
+  </script>
+</body>
+</html>

@@ -1,0 +1,141 @@
+
+📁 /
+📄 tree-to-json.js
+  • Imports:
+    - import fs from 'fs';
+    - import path from 'path';
+  • Definitions:
+    - function buildTree(dirPath, depth = 0) {
+  • Type: CLI/Test Script
+
+📁 src/
+📄 index.js
+  • Imports:
+    - import express from 'express';
+    - import morgan from 'morgan';
+    - import cors from 'cors';
+    - import dotenv from 'dotenv';
+    - import path from 'path';
+    - import { fileURLToPath } from 'url';
+    - import { router as workflowsRouter } from './routes/workflows.js';
+  • Routes:
+    - app.get('/', (_req, res) => res.json({ ok: true, service: 'billing-workflow-mvp' }));
+    - app.get('/api/health', (_req, res) => res.json({ ok: true, secure: _req.secure }));
+📄 app.js
+  • Imports:
+    - import express from "express";
+    - import path from "path";
+    - import methodOverride from "method-override";
+    - import morgan from "morgan";
+    - import dotenv from "dotenv";
+    - import indexRoutes from "./routes/index.routes.js";
+    - import workflowRoutes from "./routes/workflows.js";
+  • Type: CLI/Test Script
+📄 server.js
+  • Imports:
+    - import app from "./app.js";
+
+📁 src/routes/
+📄 index.routes.js
+  • Imports:
+    - import { Router } from "express";
+  • Routes:
+    - router.get("/", (_req, res) => {
+  • Type: CLI/Test Script
+📄 workflows.js
+  • Imports:
+    - import express from 'express';
+    - import { pool } from '../config/db.js';
+    - import { z } from 'zod';
+    - // (optional) also export default so either import style works
+  • Routes:
+    - router.get('/', async (req, res) => {
+    - router.get('/payers', async (req, res) => {
+    - router.get('/:slug/details', async (req, res) => {
+  • Type: CLI/Test Script
+
+📁 src/controllers/
+📄 workFlows.controller.js
+  • Imports:
+    - import * as Workflow from "../models/Workflow.model.js";
+  • Definitions:
+    - export async function index(req, res, next) {
+    - export async function show(req, res, next) {
+    - export async function create(req, res, next) {
+    - export async function update(req, res, next) {
+    - export async function destroy(req, res, next) {
+  • Type: CLI/Test Script
+
+📁 src/config/
+📄 db.js
+  • Imports:
+    - import mysql from 'mysql2/promise';
+    - import dotenv from 'dotenv';
+  • Type: CLI/Test Script
+
+📁 src/views/
+
+📁 src/views/layouts/
+📄 base.ejs
+  • Includes:
+    - <%- include("../partials/nav") %>
+  • Variables Used:
+    - title
+📄 list.ejs
+  • Variables Used:
+    - w
+
+📁 src/views/home/
+📄 index.ejs
+  • Definitions:
+    - async function fetchJSON(url) {
+    - async function loadWorkflows() {
+    - async function loadPayers() {
+    - async function loadDetails() {
+  • Type: CLI/Test Script
+  • Variables Used:
+    - error
+    - title
+  • Logic:
+    - if
+
+📁 src/models/
+📄 WorkFlow.model.js
+  • Imports:
+    - import db from "../config/db.js";
+  • Definitions:
+    - export async function listWorkflows() {
+    - export async function getWorkflowBySlug(slug) {
+    - export async function createWorkflow({ slug, name, description }) {
+    - export async function updateWorkflow(id, { slug, name, description }) {
+    - export async function deleteWorkflow(id) {
+  • Type: CLI/Test Script
+
+📁 scripts/
+📄 load-pfs.js
+  • Imports:
+    - import fs from "fs";
+    - import readline from "readline";
+    - import path from "path";
+    - import mysql from "mysql2/promise";
+    - import dotenv from "dotenv";
+  • Definitions:
+    - function parseAmount(s) {
+    - function parseText(s) {
+    - function parseModifier(s) {
+    - function splitFields(line) {
+    - async function importFile(filename) {
+    - async function flushRaw(batch) {
+    - async function upsertCodes(codes) {
+    - async function promoteBaseline(cy, mode) {
+    - async function promoteLocality(cy) {
+  • Type: CLI/Test Script
+📄 test-db.js
+  • Imports:
+    - import { pool } from '../src/config/db.js';
+  • Type: CLI/Test Script
+
+📁 public/
+
+📁 public/js/
+📄 alpine-init.js

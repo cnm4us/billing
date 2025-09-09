@@ -1,0 +1,56 @@
+# Semantic Blog Project Structure
+# Generated: 2025-09-07 06:21:12
+# Purpose: AI-readable project map for OpenAI thread startup
+# Semantic Blog is an AI-assisted knowledge base with chunked content, GPT-querying, and memory-aware personas.
+
+🔧 Entrypoints & Core Files:
+- app.js: Express entrypoint
+- knowledge_base.sql: MySQL schema
+- package.json: Dependencies & scripts
+- project_map.txt: Import/export map
+- project_roles.txt: Team/persona roles
+- services/logger/Logger.js: Centralized logging system
+- services/embedding/embedder.js: Embedding wrapper for OpenAI API
+- services/article/article-chunker-orchestrator.js: Full chunking pipeline
+
+📁 Root Files
+
+📁 /routes
+routes  [error opening dir]
+
+0 directories, 0 files
+
+📁 /services
+services  [error opening dir]
+
+0 directories, 0 files
+
+📁 /views
+views  [error opening dir]
+
+0 directories, 0 files
+
+📁 Other Notable Folders
+config  [error opening dir]
+
+0 directories, 0 files
+scripts
+├── load-pfs.js
+└── test-db.js
+
+0 directories, 2 files
+utils  [error opening dir]
+
+0 directories, 0 files
+
+📊 File Type Summary:
+    783 js
+    226 md
+    185 json
+      3 ejs
+
+# End of AI bootstrapping tree. Use this to understand:
+# - Entrypoints and file hierarchy
+# - Location of logger, chunking, and embedder systems
+# - View rendering structure
+# - Common file types in the codebase

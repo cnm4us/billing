@@ -1,0 +1,25 @@
+{
+  "name": "billing-workflow-mvp",
+  "version": "0.1.0",
+  "type": "module",
+  "scripts": {
+    "dev": "nodemon src/server.js",
+    "start": "node src/server.js",
+    "db:ping": "node scripts/test-db.js",
+    "load:hcpcs": "node scripts/load-hcpcs.js"
+  },
+  "dependencies": {
+    "cors": "^2.8.5",
+    "dotenv": "^16.6.1",
+    "ejs": "^3.1.10",
+    "express": "^4.19.2",
+    "jq": "^1.7.2",
+    "method-override": "^3.0.0",
+    "morgan": "^1.10.0",
+    "mysql2": "^3.14.4",
+    "zod": "^3.23.8"
+  },
+  "devDependencies": {
+    "nodemon": "^3.0.2"
+  }
+}

@@ -1,0 +1,11 @@
+<% layout("layouts/base") %>
+<h1 class="mb-2">Workflows</h1>
+
+<div class="stack">
+  <% for (const w of workflows) { %>
+    <article class="card">
+      <h3><a href="/workflows/<%= w.slug %>"><%= w.name %></a></h3>
+      <p><%= w.description %></p>
+    </article>
+  <% } %>
+</div>

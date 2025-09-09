@@ -1,0 +1,228 @@
+{
+  "name": "billing-workflow-mvp",
+  "path": "/home/ubuntu/billing-workflow-mvp",
+  "type": "directory",
+  "children": [
+    {
+      "name": ".env",
+      "path": ".env",
+      "type": "file",
+      "extension": null
+    },
+    {
+      "name": "PFREV25A.txt",
+      "path": "PFREV25A.txt",
+      "type": "file",
+      "extension": "txt"
+    },
+    {
+      "name": "PFREV25B.txt",
+      "path": "PFREV25B.txt",
+      "type": "file",
+      "extension": "txt"
+    },
+    {
+      "name": "PFREV25C.txt",
+      "path": "PFREV25C.txt",
+      "type": "file",
+      "extension": "txt"
+    },
+    {
+      "name": "PFREV25D.txt",
+      "path": "PFREV25D.txt",
+      "type": "file",
+      "extension": "txt"
+    },
+    {
+      "name": "generate.py",
+      "path": "generate.py",
+      "type": "file",
+      "extension": "py"
+    },
+    {
+      "name": "package-lock.json",
+      "path": "package-lock.json",
+      "type": "file",
+      "extension": "json"
+    },
+    {
+      "name": "package.json",
+      "path": "package.json",
+      "type": "file",
+      "extension": "json"
+    },
+    {
+      "name": "public",
+      "path": "public",
+      "type": "directory",
+      "children": [
+        {
+          "name": "js",
+          "path": "public/js",
+          "type": "directory",
+          "children": [
+            {
+              "name": "alpine-init.js",
+              "path": "public/js/alpine-init.js",
+              "type": "file",
+              "extension": "js"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "scripts",
+      "path": "scripts",
+      "type": "directory",
+      "children": [
+        {
+          "name": "load-pfs.js",
+          "path": "scripts/load-pfs.js",
+          "type": "file",
+          "extension": "js"
+        },
+        {
+          "name": "test-db.js",
+          "path": "scripts/test-db.js",
+          "type": "file",
+          "extension": "js"
+        }
+      ]
+    },
+    {
+      "name": "src",
+      "path": "src",
+      "type": "directory",
+      "children": [
+        {
+          "name": "app.js",
+          "path": "src/app.js",
+          "type": "file",
+          "extension": "js"
+        },
+        {
+          "name": "config",
+          "path": "src/config",
+          "type": "directory",
+          "children": [
+            {
+              "name": "db.js",
+              "path": "src/config/db.js",
+              "type": "file",
+              "extension": "js"
+            }
+          ]
+        },
+        {
+          "name": "controllers",
+          "path": "src/controllers",
+          "type": "directory",
+          "children": [
+            {
+              "name": "workFlows.controller.js",
+              "path": "src/controllers/workFlows.controller.js",
+              "type": "file",
+              "extension": "js"
+            }
+          ]
+        },
+        {
+          "name": "index.js",
+          "path": "src/index.js",
+          "type": "file",
+          "extension": "js"
+        },
+        {
+          "name": "models",
+          "path": "src/models",
+          "type": "directory",
+          "children": [
+            {
+              "name": "WorkFlow.model.js",
+              "path": "src/models/WorkFlow.model.js",
+              "type": "file",
+              "extension": "js"
+            }
+          ]
+        },
+        {
+          "name": "routes",
+          "path": "src/routes",
+          "type": "directory",
+          "children": [
+            {
+              "name": "index.routes.js",
+              "path": "src/routes/index.routes.js",
+              "type": "file",
+              "extension": "js"
+            },
+            {
+              "name": "workflows.js",
+              "path": "src/routes/workflows.js",
+              "type": "file",
+              "extension": "js"
+            }
+          ]
+        },
+        {
+          "name": "server.js",
+          "path": "src/server.js",
+          "type": "file",
+          "extension": "js"
+        },
+        {
+          "name": "views",
+          "path": "src/views",
+          "type": "directory",
+          "children": [
+            {
+              "name": "home",
+              "path": "src/views/home",
+              "type": "directory",
+              "children": [
+                {
+                  "name": "index.ejs",
+                  "path": "src/views/home/index.ejs",
+                  "type": "file",
+                  "extension": "ejs"
+                }
+              ]
+            },
+            {
+              "name": "layouts",
+              "path": "src/views/layouts",
+              "type": "directory",
+              "children": [
+                {
+                  "name": "base.ejs",
+                  "path": "src/views/layouts/base.ejs",
+                  "type": "file",
+                  "extension": "ejs"
+                },
+                {
+                  "name": "list.ejs",
+                  "path": "src/views/layouts/list.ejs",
+                  "type": "file",
+                  "extension": "ejs"
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "tree-list.sh",
+      "path": "tree-list.sh",
+      "type": "file",
+      "extension": "sh"
+    },
+    {
+      "name": "tree-to-json.js",
+      "path": "tree-to-json.js",
+      "type": "file",
+      "extension": "js"
+    }
+  ]
+}
